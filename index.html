@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Deuda</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- Header -->
+    <header>
+      <div class="header-top">
+        <h1 id="titulo">Control de Deuda</h1>
+        <button id="btn-admin" class="btn-icon">Administrar</button>
+      </div>
+      <p class="subtitle" id="subtitulo">Lleva el control de tus pagos</p>
+    </header>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p style="margin-top:12px">Cargando...</p>
+    </div>
+
+    <main id="main-content" style="display:none">
+
+      <!-- Dashboard -->
+      <section class="dashboard">
+        <div class="card card-total">
+          <span class="card-label">Total</span>
+          <span class="card-value" id="total">$0</span>
+        </div>
+        <div class="card card-pagado">
+          <span class="card-label">Pagado</span>
+          <span class="card-value" id="pagado">$0</span>
+        </div>
+        <div class="card card-saldo">
+          <span class="card-label">Saldo</span>
+          <span class="card-value" id="saldo">$0</span>
+        </div>
+      </section>
+
+      <!-- Progress -->
+      <section class="progress-section">
+        <div class="progress-header">
+          <span>Progreso de pago</span>
+          <span id="progress-porcentaje">0%</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </section>
+
+      <!-- No config alert -->
+      <section id="config-message" style="display:none">
+        <div class="alert alert-info">
+          No hay una deuda configurada. Ingresa al panel de administración para inicializarla.
+        </div>
+      </section>
+
+      <!-- Admin panel -->
+      <section class="admin-panel" id="admin-panel" style="display:none">
+        <div class="panel-header">
+          <h2>Panel de administración</h2>
+          <button id="btn-cerrar-admin" class="btn-close">&times;</button>
+        </div>
+
+        <div class="pin-section" id="pin-section">
+          <p>Ingresa el PIN para administrar la deuda</p>
+          <div class="pin-input-group">
+            <input type="password" id="pin-input" placeholder="PIN" maxlength="10" autocomplete="off">
+            <button id="btn-verificar-pin" class="btn-primary">Desbloquear</button>
+          </div>
+          <p class="pin-error" id="pin-error" style="display:none"></p>
+        </div>
+
+        <div class="admin-content" id="admin-content" style="display:none">
+
+          <details class="admin-section" id="init-section">
+            <summary>Inicializar / Editar deuda</summary>
+            <form id="form-init" class="admin-form">
+              <div class="form-group">
+                <label for="init-total">Monto total ($)</label>
+                <input type="number" id="init-total" placeholder="Ej: 5000000" required>
+              </div>
+              <div class="form-group">
+                <label for="init-nombre">Nombre de la deuda</label>
+                <input type="text" id="init-nombre" placeholder="Ej: CAE" value="Mi deuda">
+              </div>
+              <div class="form-group">
+                <label for="init-pin-nuevo">Cambiar PIN (opcional)</label>
+                <input type="text" id="init-pin-nuevo" placeholder="Dejar vacío para mantener el actual" maxlength="10">
+              </div>
+              <button type="submit" class="btn-primary">Guardar</button>
+            </form>
+          </details>
+
+          <details class="admin-section" open>
+            <summary>Registrar pago</summary>
+            <form id="form-pago" class="admin-form">
+              <div class="form-group">
+                <label for="pago-monto">Monto ($)</label>
+                <input type="number" id="pago-monto" placeholder="Ej: 50000" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="pago-fecha">Fecha</label>
+                  <input type="date" id="pago-fecha">
+                </div>
+                <div class="form-group">
+                  <label for="pago-concepto">Concepto</label>
+                  <input type="text" id="pago-concepto" placeholder="Opcional">
+                </div>
+              </div>
+              <button type="submit" class="btn-primary">Agregar pago</button>
+            </form>
+          </details>
+
+        </div>
+      </section>
+
+      <!-- History -->
+      <section class="history">
+        <div class="history-header">
+          <h2>Historial de pagos</h2>
+          <button id="btn-exportar" class="btn-secondary btn-small">Exportar CSV</button>
+        </div>
+        <div class="table-wrapper">
+          <table>
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Monto</th>
+                <th>Concepto</th>
+                <th class="admin-col" id="th-acciones" style="display:none">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Share -->
+      <p style="text-align:center;color:var(--text-tertiary);font-size:0.8rem;margin-bottom:12px">
+        Comparte esta página con tu aval para que vea el progreso
+        &mdash;
+        <a href="javascript:void(0)" id="btn-copiar-enlace" class="share-link">copiar enlace</a>
+      </p>
+
+    </main>
+
+    <footer>
+      <p>Control de Deuda &mdash; mantén registro de tus pagos</p>
+    </footer>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal-overlay" id="modal-overlay" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h3>Editar pago</h3>
+        <button class="btn-close" id="btn-cerrar-modal">&times;</button>
+      </div>
+      <form id="form-editar" class="admin-form">
+        <input type="hidden" id="edit-id">
+        <div class="form-group">
+          <label for="edit-monto">Monto ($)</label>
+          <input type="number" id="edit-monto" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-fecha">Fecha</label>
+          <input type="date" id="edit-fecha" required>
+        </div>
+        <div class="form-group">
+          <label for="edit-concepto">Concepto</label>
+          <input type="text" id="edit-concepto" placeholder="Opcional">
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-secondary" id="btn-cancelar-modal">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
